@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>O2 Sensor Monitoring</title>
+    <script>
+        let intervalId;
+        function fetchData() {
+            fetch('/data')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('sensor-data').innerText = data.data || 'No data';
+                });
+        }
+        function startFetching() {
+            fetchData();
+            intervalId = setInterval(fetchData, 1000);
+        }
+        function stopFetching() {
+            clearInterval(intervalId);
+        }
+        function controlRecording(action) {
+            fetch('/control?action=' + action)
+                .then(() => {
+                    if (action === 'stop') {
+                        listFiles();
+                    }
+                });
+        }
+        function listFiles() {
+            fetch('/files')
+                .then(response => response.json())
+                .then(data => {
+                    let fileList = document.getElementById('file-list');
+                    fileList.innerHTML = '';
+                    data.files.forEach(file => {
+                        let li = document.createElement('li');
+                        let link = document.createElement('a');
+                        link.href = '/view_file/' + file;
+                        link.target = '_blank';
+                        link.innerText = file;
+                        li.appendChild(link);
+                        fileList.appendChild(li);
+                    });
+                });
+        }
+        window.onload = function() {
+            startFetching();
+            listFiles();
+        };
+    </script>
+</head>
+<body>
+    <h1>O2 Sensor Monitoring</h1>
+    <p>Current O2 Level: <span id="sensor-data">Loading...</span></p>
+    <button onclick="controlRecording('start')">Start Recording</button>
+    <button onclick="controlRecording('pause')">Pause Recording</button>
+    <button onclick="controlRecording('resume')">Resume Recording</button>
+    <button onclick="controlRecording('stop')">Stop Recording</button>
+    <h2>Saved Files</h2>
+    <ul id="file-list"></ul>
+</body>
+</html>
