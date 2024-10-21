@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>O2 Sensor Dashboard</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+
+<h1>O2 Sensor Dashboard</h1>
+
+<div>
+    <h2>Live Reading: <span id="reading">--</span></h2>
+</div>
+
+<div>
+    <button id="startBtn">Start Recording</button>
+    <button id="stopBtn" disabled>Stop Recording</button>
+</div>
+
+<div>
+    <h2>Saved CSV Files</h2>
+    <ul id="fileList">
+        <!-- CSV files will be listed here -->
+    </ul>
+</div>
+
+<script>
+$(document).ready(function(){
+    function updateReading(){
+        $.getJSON('/get_reading', function(data){
+            $('#reading').text(data.reading || '--');
+        });
+    }
+    setInterval(updateReading, 1000);
+
+    function updateFileList(){
+        $.getJSON('/list_csv_files', function(data){
+            var files = data.files;
+            var fileList = $('#fileList');
+            fileList.empty();
+            files.forEach(function(file){
+                var link = $('<a></a>').attr('href', '/view_csv_file/' + file).text(file);
+                var listItem = $('<li></li>').append(link);
+                fileList.append(listItem);
+            });
+        });
+    }
+    updateFileList();
+    setInterval(updateFileList, 5000);
+
+    $('#startBtn').click(function(){
+        $.post('/start_recording', function(data){
+            $('#startBtn').prop('disabled', true);
+            $('#stopBtn').prop('disabled', false);
+        });
+    });
+
+    $('#stopBtn').click(function(){
+        $.post('/stop_recording', function(data){
+            $('#startBtn').prop('disabled', false);
+            $('#stopBtn').prop('disabled', true);
+        });
+    });
+});
+</script>
+
+</body>
+</html>
